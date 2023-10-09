@@ -2,5 +2,5 @@
 Projekt PSI
 
 Autorzy:<br>
-Wiktor Wewersajtys<br>
 Magdalena Wojciechowska<br>
+Wiktor Wewersajtys<br>
