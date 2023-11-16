@@ -23,7 +23,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateBook(CreateBookDto book) 
+        public IActionResult CreateBook(BookDto book) 
         {
             var genres = _dbContext.Genres.Where(g => book.Genres.Contains(g.Id)).ToList();
             var authors = _dbContext.Authors.Where(a => book.Authors.Contains(a.Id)).ToList();

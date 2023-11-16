@@ -7,7 +7,7 @@
         public string Surname { get; set; }
     }
 
-    public class CreateAuthorDto
+    public class AuthorDto
     {
         public string Name { get; set; }
         public string Surname { get; set;}

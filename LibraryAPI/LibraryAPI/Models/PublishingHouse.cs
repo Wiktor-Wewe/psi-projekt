@@ -11,7 +11,7 @@ namespace LibraryAPI.Models
         public string? Website { get; set; }
     }
 
-    public class CreatePublishingHouseDto
+    public class PublishingHouseDto
     {
         public string Name { get; set; }
         public int? FoundationYear { get; set; }

@@ -12,7 +12,7 @@
         public PublishingHouse PublishingHouse { get; set; }
     }
 
-    public class CreateBookDto
+    public class BookDto
     {
         public string Title { get; set; }
         public string? Description { get; set; }

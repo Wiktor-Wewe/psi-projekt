@@ -21,7 +21,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult CreateGenre(CreateGenreDto genre) 
+        public ActionResult CreateGenre(GenreDto genre) 
         {
             var newGenre = new Genre()
             {

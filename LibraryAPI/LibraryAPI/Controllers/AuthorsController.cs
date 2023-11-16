@@ -21,7 +21,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateAuthor(CreateAuthorDto author) 
+        public IActionResult CreateAuthor(AuthorDto author) 
         {
             var newAuthor = new Author()
             {

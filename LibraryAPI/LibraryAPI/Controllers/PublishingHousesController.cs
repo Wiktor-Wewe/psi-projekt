@@ -21,7 +21,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreatePublishingHouse(CreatePublishingHouseDto publishingHouse)
+        public IActionResult CreatePublishingHouse(PublishingHouseDto publishingHouse)
         {
             var newPublishingHouse = new PublishingHouse()
             {
