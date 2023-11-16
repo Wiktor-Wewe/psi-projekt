@@ -1,4 +1,5 @@
 ﻿using LibraryAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryAPI.Controllers
@@ -20,8 +21,9 @@ namespace LibraryAPI.Controllers
             return Ok(_dbContext.PublishingHouses.ToList());
         }
 
+        [Authorize]
         [HttpPost]
-        public IActionResult CreatePublishingHouse(CreatePublishingHouseDto publishingHouse)
+        public IActionResult CreatePublishingHouse(PublishingHouseDto publishingHouse)
         {
             var newPublishingHouse = new PublishingHouse()
             {

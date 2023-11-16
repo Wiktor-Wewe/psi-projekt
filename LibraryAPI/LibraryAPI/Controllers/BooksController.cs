@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryAPI.Controllers
 {
-    [Authorize]
     [Route("api/Books")]
     [ApiController]
     public class BooksController : Controller
@@ -22,8 +21,9 @@ namespace LibraryAPI.Controllers
             return Ok(_dbContext.Books.ToList());
         }
 
+        [Authorize]
         [HttpPost]
-        public IActionResult CreateBook(CreateBookDto book) 
+        public IActionResult CreateBook(BookDto book) 
         {
             var genres = _dbContext.Genres.Where(g => book.Genres.Contains(g.Id)).ToList();
             var authors = _dbContext.Authors.Where(a => book.Authors.Contains(a.Id)).ToList();

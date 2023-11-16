@@ -1,8 +1,10 @@
 ﻿using LibraryAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryAPI.Controllers
 {
+    [Authorize]
     [Route("api/Members")]
     [ApiController]
     public class MembersController : Controller
@@ -21,7 +23,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateMember(CreateMemberDto member)
+        public IActionResult CreateMember(MemberDto member)
         {
             var rents = _dbContext.Rents.Where(r => member.Rents.Contains(r.Id)).ToList();
 

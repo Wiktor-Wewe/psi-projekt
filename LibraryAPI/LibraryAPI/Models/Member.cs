@@ -12,7 +12,7 @@
         public List<Rent> Rents { get; set; }
     }
 
-    public class CreateMemberDto
+    public class MemberDto
     {
         public string Name { get; set; }
         public string Surname { get; set; }

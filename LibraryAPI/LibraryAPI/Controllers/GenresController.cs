@@ -1,4 +1,5 @@
 ﻿using LibraryAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryAPI.Controllers
@@ -20,8 +21,9 @@ namespace LibraryAPI.Controllers
             return Ok(_dbContext.Genres.ToList());
         }
 
+        [Authorize]
         [HttpPost]
-        public ActionResult CreateGenre(CreateGenreDto genre) 
+        public ActionResult CreateGenre(GenreDto genre) 
         {
             var newGenre = new Genre()
             {
