@@ -1,9 +1,11 @@
 ﻿using LibraryAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 
 namespace LibraryAPI.Controllers
 {
+    [Authorize]
     [Route("api/Rents")]
     [ApiController]
     public class RentsController : Controller

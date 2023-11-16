@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryAPI.Controllers
 {
-    [Authorize]
     [Route("api/Books")]
     [ApiController]
     public class BooksController : Controller
@@ -22,6 +21,7 @@ namespace LibraryAPI.Controllers
             return Ok(_dbContext.Books.ToList());
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult CreateBook(BookDto book) 
         {

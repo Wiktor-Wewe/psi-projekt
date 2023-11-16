@@ -1,8 +1,10 @@
 ﻿using LibraryAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryAPI.Controllers
 {
+    [Authorize]
     [Route("api/Members")]
     [ApiController]
     public class MembersController : Controller
