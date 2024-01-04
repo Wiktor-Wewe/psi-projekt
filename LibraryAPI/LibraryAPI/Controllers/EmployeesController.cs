@@ -27,11 +27,21 @@ namespace LibraryAPI.Controllers
         [HttpGet]
         public IActionResult GetEmployees()
         {
-            return Ok(_dbContext.Employees.ToList());
+            var employees = _dbContext.Employees.ToList();
+
+            var employeesDto = employees.Select(e => new EmployeeDto
+            {
+                Name = e.Name,
+                Surname = e.Surname,
+                JobPosition = e.JobPosition,
+                Password = "********"
+            }).ToList();
+
+            return Ok(employeesDto);
         }
 
         [HttpPost("Login")]
-        public IActionResult Login(EmployeeDto employee)
+        public IActionResult Login([FromBody] EmployeeDto employee)
         {
             var user = _dbContext.Employees.FirstOrDefault(e => e.Name == employee.Name && e.Surname == employee.Surname);
             if (user == null)

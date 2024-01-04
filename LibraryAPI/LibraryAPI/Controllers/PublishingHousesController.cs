@@ -18,7 +18,18 @@ namespace LibraryAPI.Controllers
         [HttpGet]
         public IActionResult GetPublishingHouses()
         {
-            return Ok(_dbContext.PublishingHouses.ToList());
+            var publishingHouses = _dbContext.PublishingHouses.ToList();
+
+            var publishingHousesDto = publishingHouses.Select(ph => new PublishingHouseDto
+            {
+                Name = ph.Name,
+                FoundationYear = ph.FoundationYear,
+                Address = ph.Address,
+                Website = ph.Website
+
+            }).ToList();
+
+            return Ok(publishingHousesDto);
         }
 
         [Authorize]

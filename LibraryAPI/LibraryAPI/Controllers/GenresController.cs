@@ -18,7 +18,15 @@ namespace LibraryAPI.Controllers
         [HttpGet]
         public ActionResult GetGenres() 
         {
-            return Ok(_dbContext.Genres.ToList());
+            var genres = _dbContext.Genres.ToList();
+
+            var genresDto = genres.Select(g => new GenreDto
+            {
+                Name = g.Name,
+                Description = g.Description
+            }).ToList();
+
+            return Ok(genresDto);
         }
 
         [Authorize]

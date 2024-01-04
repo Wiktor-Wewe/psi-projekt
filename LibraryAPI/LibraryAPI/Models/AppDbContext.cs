@@ -17,5 +17,28 @@ namespace LibraryAPI.Models
         {
 
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Rent>()
+                .HasMany(r => r.Books)
+                .WithMany(r => r.Rent);
+
+            modelBuilder.Entity<Book>()
+                .HasMany(b => b.Authors)
+                .WithMany(b => b.Books);
+
+            modelBuilder.Entity<Book>()
+                .HasMany(b => b.Genres)
+                .WithMany(b => b.Books);
+
+            modelBuilder.Entity<Rent>()
+                .HasOne(r => r.Member)
+                .WithMany(r => r.Rents)
+                .HasForeignKey(r => r.MemberId)
+                .IsRequired();
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

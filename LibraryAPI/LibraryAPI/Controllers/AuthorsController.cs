@@ -1,6 +1,12 @@
-﻿using LibraryAPI.Models;
+﻿using LibraryAPI.Entities;
+using LibraryAPI.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.IdentityModel.Tokens;
+using System.Net.Http.Headers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace LibraryAPI.Controllers
 {
@@ -15,10 +21,46 @@ namespace LibraryAPI.Controllers
             _dbContext = dbContext;
         }
 
+
         [HttpGet]
-        public IActionResult GetAuthors() 
+        public async Task<IActionResult> GetAuthors(string? searchString, int page = 1, int pageSize = 10, string sortBy = "Surname", bool ascending = true) 
         {
-            return Ok(_dbContext.Authors.ToList());
+            var query = _dbContext.Authors.AsQueryable();
+
+            if (sortBy == "Name")
+            {
+                if(searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.Name.Contains(searchString));
+                }
+
+                query = ascending ? query.OrderBy(a => a.Name) : query.OrderByDescending(a => a.Name);
+            }
+            else if (sortBy == "Surname")
+            {
+                if(searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.Surname.Contains(searchString));
+                }
+
+                query = ascending ? query.OrderBy(a => a.Surname) : query.OrderByDescending(a => a.Surname);
+            }
+            else
+            {
+                return BadRequest("Sorting Error");
+            }
+
+            var paginatedAuthors = await PaginatedList<AuthorDto>.CreateAsync(
+                query.Select(a => new AuthorDto
+                {
+                    Name = a.Name,
+                    Surname = a.Surname
+                }).AsQueryable(),
+                page,
+                pageSize
+            );
+
+            return Ok(paginatedAuthors);
         }
 
         [Authorize]
