@@ -15,6 +15,7 @@
 
     public class RentDto
     {
+        public Guid? Id { get; set; }
         public DateOnly RentDate { get; set; }
         public DateOnly PlannedReturnDate { get; set; }
         public DateOnly? ReturnDate { get; set; }

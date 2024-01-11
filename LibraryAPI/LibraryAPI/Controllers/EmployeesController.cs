@@ -1,4 +1,5 @@
-﻿using LibraryAPI.Models;
+﻿using LibraryAPI.Entities;
+using LibraryAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace LibraryAPI.Controllers
 {
@@ -25,19 +27,56 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetEmployees()
+        public async Task<IActionResult> GetEmployees(string? searchString, int page = 1, int pageSize = 10, string sortBy = "Surname", bool ascending = true)
         {
-            var employees = _dbContext.Employees.ToList();
+            var query = _dbContext.Employees.AsQueryable();
 
-            var employeesDto = employees.Select(e => new EmployeeDto
+            // Sorting
+            if(sortBy == "Surname")
             {
-                Name = e.Name,
-                Surname = e.Surname,
-                JobPosition = e.JobPosition,
-                Password = "********"
-            }).ToList();
+                if (searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.Surname.Contains(searchString));
+                }
+                query = ascending ? query.OrderBy(a => a.Surname) : query.OrderByDescending(a => a.Surname);
+            }
+            else if(sortBy == "Name")
+            {
+                if (searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.Name.Contains(searchString));
+                }
 
-            return Ok(employeesDto);
+                query = ascending ? query.OrderBy(a => a.Name) : query.OrderByDescending(a => a.Name);
+            }
+            else if(sortBy == "JobPosition")
+            {
+                if (searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.JobPosition.Contains(searchString));
+                }
+
+                query = ascending ? query.OrderBy(a => a.JobPosition) : query.OrderByDescending(a => a.JobPosition);
+            }
+            else
+            {
+                return BadRequest("Sorting Error");
+            }
+
+            var paginatedEmployees = await PaginatedList<EmployeeDto>.CreateAsync(
+                query.Select(e => new EmployeeDto
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    Surname = e.Surname,
+                    JobPosition = e.JobPosition,
+                    Password = "********"
+                }).AsQueryable(),
+                page,
+                pageSize
+            );
+
+            return Ok(paginatedEmployees);
         }
 
         [HttpPost("Login")]
@@ -63,7 +102,6 @@ namespace LibraryAPI.Controllers
                     new Claim(ClaimTypes.Name, $"{user.Name}-{user.Surname}-{user.JobPosition}"),
                     new Claim(JwtRegisteredClaimNames.Iss, _configuration["Jwt:ValidIssuer"]), // check if is not null
                     new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:ValidAudience"]), // check if is not null
-                    // Dodaj inne roszczenia...
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

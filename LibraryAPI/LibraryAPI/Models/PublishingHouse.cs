@@ -13,6 +13,7 @@ namespace LibraryAPI.Models
 
     public class PublishingHouseDto
     {
+        public Guid? Id { get; set; }
         public required string Name { get; set; }
         public int? FoundationYear { get; set; }
         public string? Address { get; set; }

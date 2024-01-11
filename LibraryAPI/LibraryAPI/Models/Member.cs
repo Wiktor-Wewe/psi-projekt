@@ -14,6 +14,7 @@
 
     public class MemberDto
     {
+        public Guid? Id { get; set; }
         public required string Name { get; set; }
         public required string Surname { get; set; }
         public DateOnly Birthdate { get; set; }

@@ -62,6 +62,7 @@ namespace LibraryAPI.Controllers
             var paginatedBooks = await PaginatedList<BookDto>.CreateAsync(
                 query.Select(b => new BookDto
                 {
+                    Id = b.Id,
                     Title = b.Title,
                     Description = b.Description,
                     RelaseDate = b.RelaseDate,
@@ -76,6 +77,74 @@ namespace LibraryAPI.Controllers
             );
 
             return Ok(paginatedBooks);
+        }
+
+        [HttpGet("{id}/publishingHouse")]
+        public async Task<IActionResult> GetBooksPublishingHouse([FromRoute] Guid id)
+        {
+            var publishingHouse = await _dbContext.PublishingHouses
+                .FirstOrDefaultAsync(ph => ph.Id == id);
+
+            if(publishingHouse == null)
+            {
+                return NotFound("Publishing house not found");
+            }
+
+            var publishingHouseDto = new PublishingHouseDto
+            {
+                Id = publishingHouse.Id,
+                Name = publishingHouse.Name,
+                FoundationYear = publishingHouse.FoundationYear,
+                Address = publishingHouse.Address,
+                Website = publishingHouse.Website
+            };
+
+            return Ok(publishingHouseDto);
+        }
+
+        [HttpGet("{id}/Genres")]
+        public async Task<IActionResult> GetBooksGenres([FromRoute] Guid id)
+        {
+            var book = await _dbContext.Books
+                .Include(b => b.Genres)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if(book == null)
+            {
+                return NotFound("Book not found");
+            }
+
+            var genresDto = book.Genres.Select(g => new GenreDto
+            {
+                Id = g.Id,
+                Name = g.Name,
+                Description = g.Description
+            }).ToList();
+
+
+            return Ok(genresDto);
+        }
+
+        [HttpGet("{id}/Authors")]
+        public async Task<IActionResult> GetBooksAuthors([FromRoute] Guid id)
+        {
+            var book = await _dbContext.Books
+                .Include(b => b.Authors)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if(book == null)
+            {
+                return NotFound("Book not found");
+            }
+
+            var authorsDto = book.Authors.Select(a => new AuthorDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Surname = a.Surname
+            }).ToList();
+
+            return Ok(authorsDto);
         }
 
         [Authorize]
