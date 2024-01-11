@@ -1,6 +1,9 @@
-﻿using LibraryAPI.Models;
+﻿using LibraryAPI.Entities;
+using LibraryAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace LibraryAPI.Controllers
 {
@@ -16,9 +19,132 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetBooks()
+        public async Task<IActionResult> GetBooks(string? searchString, DateOnly? startDate, DateOnly? endDate, int page = 1, int pageSize = 10, string sortBy = "Title", bool ascending = true)
         {
-            return Ok(_dbContext.Books.ToList());
+            var query = _dbContext.Books
+                .Include(x => x.Genres)
+                .Include(x => x.Authors)
+                .Include(x => x.PublishingHouse)
+                .AsQueryable();
+
+            if(sortBy == "Title")
+            {
+                if (searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.Title.Contains(searchString));
+                }
+
+                query = ascending ? query.OrderBy(a => a.Title) : query.OrderByDescending(a => a.Title);
+            }
+            else if (sortBy == "RelaseDate")
+            {
+                if (startDate.HasValue && endDate.HasValue)
+                {
+                    query = query.Where(r => r.RelaseDate > startDate && r.RelaseDate < endDate);
+                }
+
+                query = ascending ? query.OrderBy(a => a.RelaseDate) : query.OrderByDescending(a => a.RelaseDate);
+            }
+            else if (sortBy == "ISBN")
+            {
+                if (searchString.IsNullOrEmpty() == false)
+                {
+                    query = query.Where(a => a.ISBN.Contains(searchString));
+                }
+
+                query = ascending ? query.OrderBy(a => a.ISBN) : query.OrderByDescending(a => a.ISBN);
+            }
+            else
+            {
+                return BadRequest("Sorting Error");
+            }
+
+            var paginatedBooks = await PaginatedList<BookDto>.CreateAsync(
+                query.Select(b => new BookDto
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Description = b.Description,
+                    RelaseDate = b.RelaseDate,
+                    ISBN = b.ISBN,
+                    Genres = b.Genres.Select(g => g.Id).ToList(),
+                    Authors = b.Authors.Select(a => a.Id).ToList(),
+                    PublishingHouse = b.PublishingHouseId
+
+                }).AsQueryable(),
+                page,
+                pageSize
+            );
+
+            return Ok(paginatedBooks);
+        }
+
+        [HttpGet("{id}/publishingHouse")]
+        public async Task<IActionResult> GetBooksPublishingHouse([FromRoute] Guid id)
+        {
+            var publishingHouse = await _dbContext.PublishingHouses
+                .FirstOrDefaultAsync(ph => ph.Id == id);
+
+            if(publishingHouse == null)
+            {
+                return NotFound("Publishing house not found");
+            }
+
+            var publishingHouseDto = new PublishingHouseDto
+            {
+                Id = publishingHouse.Id,
+                Name = publishingHouse.Name,
+                FoundationYear = publishingHouse.FoundationYear,
+                Address = publishingHouse.Address,
+                Website = publishingHouse.Website
+            };
+
+            return Ok(publishingHouseDto);
+        }
+
+        [HttpGet("{id}/Genres")]
+        public async Task<IActionResult> GetBooksGenres([FromRoute] Guid id)
+        {
+            var book = await _dbContext.Books
+                .Include(b => b.Genres)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if(book == null)
+            {
+                return NotFound("Book not found");
+            }
+
+            var genresDto = book.Genres.Select(g => new GenreDto
+            {
+                Id = g.Id,
+                Name = g.Name,
+                Description = g.Description
+            }).ToList();
+
+
+            return Ok(genresDto);
+        }
+
+        [HttpGet("{id}/Authors")]
+        public async Task<IActionResult> GetBooksAuthors([FromRoute] Guid id)
+        {
+            var book = await _dbContext.Books
+                .Include(b => b.Authors)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if(book == null)
+            {
+                return NotFound("Book not found");
+            }
+
+            var authorsDto = book.Authors.Select(a => new AuthorDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Surname = a.Surname
+            }).ToList();
+
+            return Ok(authorsDto);
         }
 
         [Authorize]

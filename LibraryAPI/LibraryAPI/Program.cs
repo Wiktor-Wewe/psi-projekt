@@ -1,3 +1,4 @@
+using LibraryAPI.Entities;
 using LibraryAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +89,16 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API V1");
     });
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var dbContext = services.GetRequiredService<AppDbContext>();
+    var passwordHasher = services.GetRequiredService<IPasswordHasher<Employee>>();
+
+    DbInitializer.Initialize(dbContext, passwordHasher);
 }
 
 app.UseHttpsRedirection();
