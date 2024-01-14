@@ -11,7 +11,7 @@ using LibraryAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryAPI.Tests
+namespace LibraryAPI.Tests.Tests
 {
     [Category("GenresControllerTests")]
     public class GenresControllerTests

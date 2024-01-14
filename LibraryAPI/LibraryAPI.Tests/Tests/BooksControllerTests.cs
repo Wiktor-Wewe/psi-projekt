@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LibraryAPI.Tests
+namespace LibraryAPI.Tests.Tests
 {
     [Category("BooksControllerTests")]
     public class BooksControllerTests

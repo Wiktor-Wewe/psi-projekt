@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryAPI.Tests
+namespace LibraryAPI.Tests.Tests
 {
     [Category("EmployeesControllerTests")]
     public class EmployeesControllerTests
