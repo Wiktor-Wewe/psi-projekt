@@ -34,8 +34,8 @@ namespace LibraryAPI.Tests.Tests
             var context = await GetDatabaseContext();
             context.Members.AddRange(new List<Member>
             {
-                new Member { Id = Guid.NewGuid(), Name = "John", Surname = "Doe", Birthdate = new DateOnly(1990, 1, 1), Address = "123 Main St", PhoneNumber = "555-1234", Email = "john.doe@example.com" },
-                new Member { Id = Guid.NewGuid(), Name = "Jane", Surname = "Smith", Birthdate = new DateOnly(1985, 5, 5), Address = "456 Oak St", PhoneNumber = "555-5678", Email = "jane.smith@example.com" }
+                new Member { Id = Guid.NewGuid(), Name = "John", Surname = "Doe", Birthdate = new DateTime(1990, 1, 1), Address = "123 Main St", PhoneNumber = "555-1234", Email = "john.doe@example.com" },
+                new Member { Id = Guid.NewGuid(), Name = "Jane", Surname = "Smith", Birthdate = new DateTime(1985, 5, 5), Address = "456 Oak St", PhoneNumber = "555-5678", Email = "jane.smith@example.com" }
             });
             await context.SaveChangesAsync();
 
@@ -62,15 +62,15 @@ namespace LibraryAPI.Tests.Tests
                 Id = memberId,
                 Name = "John",
                 Surname = "Doe",
-                Birthdate = new DateOnly(1990, 1, 1),
+                Birthdate = new DateTime(1990, 1, 1),
                 Address = "123 Main St",
                 PhoneNumber = "555-1234",
                 Email = "john.doe@example.com"
             });
             context.Rents.AddRange(new List<Rent>
             {
-                new Rent { Id = Guid.NewGuid(), RentDate = new DateOnly(2023, 1, 1), PlannedReturnDate = new DateOnly(2023, 1, 10), MemberId = memberId },
-                new Rent { Id = Guid.NewGuid(), RentDate = new DateOnly(2023, 2, 1), PlannedReturnDate = new DateOnly(2023, 2, 10), MemberId = memberId }
+                new Rent { Id = Guid.NewGuid(), RentDate = new DateTime(2023, 1, 1), PlannedReturnDate = new DateTime(2023, 1, 10), MemberId = memberId },
+                new Rent { Id = Guid.NewGuid(), RentDate = new DateTime(2023, 2, 1), PlannedReturnDate = new DateTime(2023, 2, 10), MemberId = memberId }
             });
             await context.SaveChangesAsync();
 

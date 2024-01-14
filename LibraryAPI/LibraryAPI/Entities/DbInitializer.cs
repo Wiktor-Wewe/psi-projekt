@@ -93,7 +93,7 @@ namespace LibraryAPI.Entities
                     {
                         Name = "Joe",
                         Surname = "Smith",
-                        Birthdate = new DateOnly(1998, 3, 2),
+                        Birthdate = new DateTime(1998, 3, 2),
                         PhoneNumber = "983-231-231",
                         Rents = new List<Rent>()
                     },
@@ -101,7 +101,7 @@ namespace LibraryAPI.Entities
                     {
                         Name = "John",
                         Surname = "Johnson",
-                        Birthdate = new DateOnly(1999, 6, 20),
+                        Birthdate = new DateTime(1999, 6, 20),
                         Email = "John.Johanson@gmail.com",
                         Rents = new List<Rent>(),
                         PhoneNumber = "987-241-231"
@@ -120,7 +120,7 @@ namespace LibraryAPI.Entities
                     {
                         Title = "It",
                         Description = "It is a 1986 horror novel by American author Stephen King. It was his 22nd book and his 17th novel written under his own name.",
-                        RelaseDate = new DateOnly(1986, 8, 15),
+                        RelaseDate = new DateTime(1986, 8, 15),
                         ISBN = "0-670-81302-8",
                         Genres = context.Genres.Take(1).ToList(),
                         Authors = context.Authors.Take(1).ToList(),
@@ -145,25 +145,25 @@ namespace LibraryAPI.Entities
                 {
                     new Rent
                     {
-                        RentDate = new DateOnly(2023, 8, 23),
-                        PlannedReturnDate = new DateOnly(2023, 9, 23),
-                        ReturnDate = new DateOnly(2023, 9, 2),
+                        RentDate = new DateTime(2023, 8, 23),
+                        PlannedReturnDate = new DateTime(2023, 9, 23),
+                        ReturnDate = new DateTime(2023, 9, 2),
                         Member = context.Members.FirstOrDefault(m => m.Name != " "),
                         Books = context.Books.Take(1).ToList(),
                         Employee = context.Employees.FirstOrDefault(e => e.Name != " ")
                     },
                     new Rent
                     {
-                        RentDate = new DateOnly(2023, 9, 5),
-                        PlannedReturnDate = new DateOnly(2023, 9, 5),
+                        RentDate = new DateTime(2023, 9, 5),
+                        PlannedReturnDate = new DateTime(2023, 9, 5),
                         Member = context.Members.FirstOrDefault(m => m.Name != " "),
                         Books = context.Books.Take(1).ToList(),
                         Employee = context.Employees.FirstOrDefault(e => e.Name != " ")
                     },
                     new Rent
                     {
-                        RentDate = new DateOnly(2023, 11, 12),
-                        PlannedReturnDate = new DateOnly(2023, 12, 12),
+                        RentDate = new DateTime(2023, 11, 12),
+                        PlannedReturnDate = new DateTime(2023, 12, 12),
                         Member = context.Members.FirstOrDefault(m => m.Name != " "),
                         Books = context.Books.ToList(),
                         Employee = context.Employees.FirstOrDefault(e => e.Name != " ")

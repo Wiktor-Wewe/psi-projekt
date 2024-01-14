@@ -61,7 +61,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpGet("{id}/Books")]
-        public async Task<IActionResult> GetGenresBooks([FromRoute] Guid id, string? searchString, DateOnly? startDate, DateOnly? endDate, int page = 1, int pageSize = 10, string sortBy = "Title", bool ascending = true)
+        public async Task<IActionResult> GetGenresBooks([FromRoute] Guid id, string? searchString, DateTime? startDate, DateTime? endDate, int page = 1, int pageSize = 10, string sortBy = "Title", bool ascending = true)
         {
             var query = _dbContext.Books
                 .Include(x => x.Genres)

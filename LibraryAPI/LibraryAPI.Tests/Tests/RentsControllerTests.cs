@@ -34,8 +34,8 @@ namespace LibraryAPI.Tests.Tests
             var context = await GetDatabaseContext();
             context.Rents.AddRange(new List<Rent>
             {
-                new Rent { Id = Guid.NewGuid(), RentDate = new DateOnly(2022, 1, 1), PlannedReturnDate = new DateOnly(2022, 1, 10) },
-                new Rent { Id = Guid.NewGuid(), RentDate = new DateOnly(2022, 2, 1), PlannedReturnDate = new DateOnly(2022, 2, 10) }
+                new Rent { Id = Guid.NewGuid(), RentDate = new DateTime(2022, 1, 1), PlannedReturnDate = new DateTime(2022, 1, 10) },
+                new Rent { Id = Guid.NewGuid(), RentDate = new DateTime(2022, 2, 1), PlannedReturnDate = new DateTime(2022, 2, 10) }
             });
             await context.SaveChangesAsync();
 
@@ -80,7 +80,7 @@ namespace LibraryAPI.Tests.Tests
             // Arrange
             var context = await GetDatabaseContext();
             var rentId = Guid.NewGuid();
-            context.Rents.Add(new Rent { Id = rentId, RentDate = new DateOnly(2022, 1, 1), PlannedReturnDate = new DateOnly(2022, 1, 10) });
+            context.Rents.Add(new Rent { Id = rentId, RentDate = new DateTime(2022, 1, 1), PlannedReturnDate = new DateTime(2022, 1, 10) });
             await context.SaveChangesAsync();
 
             var controller = new RentsController(context);
@@ -92,8 +92,8 @@ namespace LibraryAPI.Tests.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(rentDto, Is.Not.Null);
-            Assert.That(rentDto.RentDate, Is.EqualTo(new DateOnly(2022, 1, 1)));
-            Assert.That(rentDto.PlannedReturnDate, Is.EqualTo(new DateOnly(2022, 1, 10)));
+            Assert.That(rentDto.RentDate, Is.EqualTo(new DateTime(2022, 1, 1)));
+            Assert.That(rentDto.PlannedReturnDate, Is.EqualTo(new DateTime(2022, 1, 10)));
         }
 
         [Test]
@@ -114,8 +114,8 @@ namespace LibraryAPI.Tests.Tests
 
             var rentDto = new RentDto
             {
-                RentDate = new DateOnly(2022, 1, 1),
-                PlannedReturnDate = new DateOnly(2022, 1, 10),
+                RentDate = new DateTime(2022, 1, 1),
+                PlannedReturnDate = new DateTime(2022, 1, 10),
                 Member = member.Id,
                 Books = new List<Guid> { book1.Id, book2.Id },
                 Employee = employee.Id
@@ -128,8 +128,8 @@ namespace LibraryAPI.Tests.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(createdRent, Is.Not.Null);
-            Assert.That(createdRent.RentDate, Is.EqualTo(new DateOnly(2022, 1, 1)));
-            Assert.That(createdRent.PlannedReturnDate, Is.EqualTo(new DateOnly(2022, 1, 10)));
+            Assert.That(createdRent.RentDate, Is.EqualTo(new DateTime(2022, 1, 1)));
+            Assert.That(createdRent.PlannedReturnDate, Is.EqualTo(new DateTime(2022, 1, 10)));
         }
 
         [Test]
@@ -138,7 +138,7 @@ namespace LibraryAPI.Tests.Tests
             // Arrange
             var context = await GetDatabaseContext();
             var controller = new RentsController(context);
-            var originalRent = new Rent { Id = Guid.NewGuid(), RentDate = new DateOnly(2022, 1, 1), PlannedReturnDate = new DateOnly(2022, 1, 10) };
+            var originalRent = new Rent { Id = Guid.NewGuid(), RentDate = new DateTime(2022, 1, 1), PlannedReturnDate = new DateTime(2022, 1, 10) };
             context.Rents.Add(originalRent);
             await context.SaveChangesAsync();
 
@@ -153,8 +153,8 @@ namespace LibraryAPI.Tests.Tests
 
             var rentDto = new RentDto
             {
-                RentDate = new DateOnly(2022, 2, 1),
-                PlannedReturnDate = new DateOnly(2022, 2, 10),
+                RentDate = new DateTime(2022, 2, 1),
+                PlannedReturnDate = new DateTime(2022, 2, 10),
                 Member = member.Id,
                 Books = new List<Guid> { book.Id },
                 Employee = employee.Id
@@ -167,8 +167,8 @@ namespace LibraryAPI.Tests.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(editedRent, Is.Not.Null);
-            Assert.That(editedRent.RentDate, Is.EqualTo(new DateOnly(2022, 2, 1)));
-            Assert.That(editedRent.PlannedReturnDate, Is.EqualTo(new DateOnly(2022, 2, 10)));
+            Assert.That(editedRent.RentDate, Is.EqualTo(new DateTime(2022, 2, 1)));
+            Assert.That(editedRent.PlannedReturnDate, Is.EqualTo(new DateTime(2022, 2, 10)));
         }
 
         [Test]

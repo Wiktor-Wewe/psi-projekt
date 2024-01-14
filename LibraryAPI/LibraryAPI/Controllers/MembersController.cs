@@ -20,7 +20,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMembers(string? searchString, DateOnly? startDate, DateOnly? endDate, int page = 1, int pageSize = 10, string sortBy = "Surname", bool ascending = true) 
+        public async Task<IActionResult> GetMembers(string? searchString, DateTime? startDate, DateTime? endDate, int page = 1, int pageSize = 10, string sortBy = "Surname", bool ascending = true) 
         {
             var query = _dbContext.Members
                 .Include(m => m.Rents)
@@ -106,7 +106,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpGet("{id}/Rents")]
-        public async Task<IActionResult> GetMembersRents([FromRoute] Guid id, DateOnly? startDate, DateOnly? endDate, int page = 1, int pageSize = 10, string sortBy = "RentDate", bool ascending = true)
+        public async Task<IActionResult> GetMembersRents([FromRoute] Guid id, DateTime? startDate, DateTime? endDate, int page = 1, int pageSize = 10, string sortBy = "RentDate", bool ascending = true)
         {
             var query = _dbContext.Rents
                 .Include(m => m.Member)

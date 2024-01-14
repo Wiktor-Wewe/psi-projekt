@@ -20,7 +20,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllRents(DateOnly? startDate, DateOnly? endDate, int page = 1, int pageSize = 10, string sortBy = "RentDate", bool ascending = true)
+        public async Task<IActionResult> GetAllRents(DateTime? startDate, DateTime? endDate, int page = 1, int pageSize = 10, string sortBy = "RentDate", bool ascending = true)
         {
             var query = _dbContext.Rents
                 .Include(m => m.Member)

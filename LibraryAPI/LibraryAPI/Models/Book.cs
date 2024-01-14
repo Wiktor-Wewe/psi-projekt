@@ -5,7 +5,7 @@
         public Guid Id { get; set; }
         public required string Title { get; set; }
         public string? Description { get; set; }
-        public DateOnly? RelaseDate { get; set; }
+        public DateTime? RelaseDate { get; set; }
         public required string ISBN { get; set; }
         public Guid PublishingHouseId { get; set; }
         public PublishingHouse PublishingHouse { get; set; } = null!;
@@ -19,7 +19,7 @@
         public Guid? Id { get; set; }
         public required string Title { get; set; }
         public string? Description { get; set; }
-        public DateOnly? RelaseDate { get; set; }
+        public DateTime? RelaseDate { get; set; }
         public required string ISBN { get; set; }
         public required List<Guid> Genres { get; set; }
         public required List<Guid> Authors { get; set; }
