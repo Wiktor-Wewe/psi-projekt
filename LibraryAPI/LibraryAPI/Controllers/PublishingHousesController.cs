@@ -144,7 +144,7 @@ namespace LibraryAPI.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult CreatePublishingHouse(PublishingHouseDto publishingHouse)
+        public async Task<IActionResult> CreatePublishingHouse(PublishingHouseDto publishingHouse)
         {
             var newPublishingHouse = new PublishingHouse()
             {
@@ -155,9 +155,95 @@ namespace LibraryAPI.Controllers
             };
 
             _dbContext.PublishingHouses.Add(newPublishingHouse);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
-            return Ok(_dbContext.PublishingHouses.FirstOrDefault(p => p.Name == publishingHouse.Name));
+            var publishingHouseFromDb = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Name == publishingHouse.Name);
+            if (publishingHouseFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var publishingHouseDto = new PublishingHouseDto
+            {
+                Id = publishingHouseFromDb.Id,
+                Name = publishingHouseFromDb.Name,
+                FoundationYear = publishingHouseFromDb.FoundationYear,
+                Address = publishingHouseFromDb.Address,
+                Website = publishingHouseFromDb.Website
+            };
+
+            return Ok(publishingHouseDto);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPublishingHouse([FromRoute] Guid id)
+        {
+            var house = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == id);
+            if (house == null)
+            {
+                return NotFound();
+            }
+
+            var publishingHouseDto = new PublishingHouseDto
+            {
+                Id = house.Id,
+                Name = house.Name,
+                FoundationYear = house.FoundationYear,
+                Address = house.Address,
+                Website = house.Website
+            };
+
+            return Ok(publishingHouseDto);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditPublishingHouse([FromRoute] Guid id, PublishingHouseDto house)
+        {
+            var originalHouse = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == id);
+            if (originalHouse == null)
+            {
+                return NotFound();
+            }
+
+            originalHouse.Name = house.Name;
+            originalHouse.FoundationYear = house.FoundationYear;
+            originalHouse.Address = house.Address;
+            originalHouse.Website = house.Website;
+
+            await _dbContext.SaveChangesAsync();
+
+            var publishingHouseFromDb = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == id);
+            if (publishingHouseFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var publishingHouseDto = new PublishingHouseDto
+            {
+                Id = publishingHouseFromDb.Id,
+                Name = publishingHouseFromDb.Name,
+                FoundationYear = publishingHouseFromDb.FoundationYear,
+                Address = publishingHouseFromDb.Address,
+                Website = publishingHouseFromDb.Website
+            };
+
+            return Ok(publishingHouseDto);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePublishingHouse([FromRoute] Guid id)
+        {
+            var house = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == id);
+            if (house == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.PublishingHouses.Remove(house);
+            await _dbContext.SaveChangesAsync();
+            return Ok();
         }
     }
 }

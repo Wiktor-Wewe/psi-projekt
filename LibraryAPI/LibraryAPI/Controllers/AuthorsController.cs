@@ -130,7 +130,7 @@ namespace LibraryAPI.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult CreateAuthor(AuthorDto author) 
+        public async Task<IActionResult> CreateAuthor(AuthorDto author) 
         {
             var newAuthor = new Author()
             {
@@ -139,10 +139,87 @@ namespace LibraryAPI.Controllers
             };
 
             _dbContext.Authors.Add(newAuthor);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
-            return Ok(_dbContext.Authors.FirstOrDefault(a => a.Name == author.Name && a.Surname == author.Surname));
+            var authorFromDb = await _dbContext.Authors.FirstOrDefaultAsync(a => a.Name == author.Name && a.Surname == author.Surname);
+            if (authorFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var authorDto = new AuthorDto
+            {
+                Id = authorFromDb.Id,
+                Name = authorFromDb.Name,
+                Surname = authorFromDb.Surname,
+            };
+
+            return Ok(authorDto);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAuthor([FromRoute] Guid id)
+        {
+            var author = await _dbContext.Authors.FirstOrDefaultAsync(a => a.Id == id);
+            if (author == null)
+            {
+                return NotFound();
+            }
+
+            var authorDto = new AuthorDto
+            {
+                Id = id,
+                Name = author.Name,
+                Surname = author.Surname
+            };
+
+            return Ok(authorDto);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditAuthor([FromRoute] Guid id, AuthorDto author)
+        {
+            var originalAuthor = await _dbContext.Authors.FirstOrDefaultAsync(a => a.Id == id);
+            if (originalAuthor == null)
+            {
+                return NotFound();
+            }
+
+            originalAuthor.Surname = author.Surname;
+            originalAuthor.Name = author.Name;
+
+            await _dbContext.SaveChangesAsync();
+
+            var authorFromDb = await _dbContext.Authors.FirstOrDefaultAsync(a => a.Id == id);
+            if (authorFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var authorDto = new AuthorDto
+            {
+                Id = authorFromDb.Id,
+                Name = authorFromDb.Name,
+                Surname = authorFromDb.Surname
+            };
+
+            return Ok(authorDto);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAuthor([FromRoute] Guid id)
+        {
+            var author = await _dbContext.Authors.FirstOrDefaultAsync(a => a.Id == id);
+            if (author == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Authors.Remove(author);
+            await _dbContext.SaveChangesAsync();
+            return Ok();
+        }
     }
 }
