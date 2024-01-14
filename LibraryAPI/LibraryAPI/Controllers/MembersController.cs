@@ -158,9 +158,9 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateMember(MemberDto member)
+        public async Task<IActionResult> CreateMember(MemberDto member)
         {
-            var rents = _dbContext.Rents.Where(r => member.Rents.Contains(r.Id)).ToList();
+            var rents = await _dbContext.Rents.WhereAsync(r => member.Rents.Contains(r.Id)).ToList();
 
             var newMember = new Member()
             {
@@ -174,9 +174,109 @@ namespace LibraryAPI.Controllers
             };
 
             _dbContext.Members.Add(newMember);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
-            return Ok(_dbContext.Members.FirstOrDefault(m => m.Surname == member.Surname && m.Email == member.Email));
+            var memberFromDb = await _dbContext.Members.FirstOrDefault(m => m.Surname == member.Surname && m.Email == member.Email);
+            if (memberFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var memberDto = new MemberDto
+            {
+                Id = memberFromDb.Id,
+                Name = memberFromDb.Name,
+                Surname = memberFromDb.Surname,
+                Birthdate = memberFromDb.Birthdate,
+                Address = memberFromDb.Address,
+                PhoneNumber = memberFromDb.PhoneNumber,
+                Email = memberFromDb.Email,
+                Rents = rents.select(x => x.Id).ToList()
+            };
+
+            return Ok(memberDto);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMember([FromRoute] Guid id)
+        {
+            var member = _dbContext.Members.FirstOrDefault(m => m.Id == id);
+            if (member == null)
+            {
+                return NotFound();
+            }
+
+            var memberDto = new MemberDto
+            {
+                Id = member.Id,
+                Name = member.Name,
+                Surname = member.Surname,
+                Birthdate = member.Birthdate,
+                Address = member.Address,
+                PhoneNumber = member.PhoneNumber,
+                Email = member.Email,
+                Rents = member.Rents.select(x => x.Id).ToList()
+            };
+
+            return Ok(memberDto);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditMember([FromRoute] Guid id, MemberDto member)
+        {
+            var originalMember = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == id);
+            if (originalMember == null)
+            {
+                return NotFound();
+            }
+
+            var rent = await _dbContext.Rents.WhereAsync(r => member.Rents.Contains(r.Id)).ToList();
+
+            originalMember.Name = member.Name;
+            originalMember.Surname = member.Surname;
+            originalMember.Email = member.Email;
+            originalMember.Birthdate = member.Birthdate;
+            originalMember.Address = member.Address;
+            originalMember.PhoneNumber = member.PhoneNumber;
+            originalMember.Rents = rent;
+
+            await _dbContext.SaveChangesAsync();
+
+            var memberFromDb = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == id);
+            if (memberFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var memberDto = new MemberDto
+            {
+                Id = memberFromDb.Id,
+                Name = memberFromDb.Name,
+                Surname = memberFromDb.Surname,
+                Birthdate = memberFromDb.Birthdate,
+                Address = memberFromDb.Address,
+                PhoneNumber = memberFromDb.PhoneNumber,
+                Email = memberFromDb.Email,
+                Rents = memberDto.Rents.Select(r => r.Id).ToArray()
+            };
+
+            return Ok(memberDto);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMember([FromRoute] Guid id)
+        {
+            var member = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == id);
+            if (member == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Members.Remove(member);
+            await _dbContext.SaveChangesAsync();
+            return Ok();
         }
     }
 }

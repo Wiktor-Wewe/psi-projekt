@@ -189,7 +189,7 @@ namespace LibraryAPI.Controllers
             originalAuthor.Surname = author.Surname;
             originalAuthor.Name = author.Name;
 
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
             var authorFromDb = await _dbContext.Authors.FirstOrDefaultAsync(a => a.Id == id);
             if (authorFromDb == null)

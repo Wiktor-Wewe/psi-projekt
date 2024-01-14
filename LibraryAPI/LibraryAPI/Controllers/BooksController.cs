@@ -149,11 +149,11 @@ namespace LibraryAPI.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult CreateBook(BookDto book) 
+        public async Task<IActionResult> CreateBook(BookDto book) 
         {
-            var genres = _dbContext.Genres.Where(g => book.Genres.Contains(g.Id)).ToList();
-            var authors = _dbContext.Authors.Where(a => book.Authors.Contains(a.Id)).ToList();
-            var publishingHouse = _dbContext.PublishingHouses.FirstOrDefault(p => p.Id == book.PublishingHouse);
+            var genres = await _dbContext.Genres.WhereAsync(g => book.Genres.Contains(g.Id)).ToList();
+            var authors = await _dbContext.Authors.WhereAsync(a => book.Authors.Contains(a.Id)).ToList();
+            var publishingHouse = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == book.PublishingHouse);
 
             var newBook = new Book()
             {
@@ -167,9 +167,123 @@ namespace LibraryAPI.Controllers
             };
 
             _dbContext.Books.Add(newBook);
-            _dbContext.SaveChanges();
-            
-            return Ok(_dbContext.Books.FirstOrDefault(b => b.ISBN == book.ISBN)); 
+            await _dbContext.SaveChangesAsync();
+
+            var bookFromDb = await _dbContext.Books.FirstOrDefaultAsync(b => b.ISBN == book.ISBN);
+            if (bookFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var bookDto = new BookDto
+            {
+                Id = bookFromDb.Id,
+                Title = bookFromDb.Title,
+                Description = bookFromDb.Description,
+                RelaseDate = bookFromDb.RelaseDate,
+                ISBN = bookFromDb.ISBN,
+                Genres = genres.select(x => x.Id).ToList(),
+                Authors = authors.select(x => x.Id).ToList(),
+                PublishingHouse = publishingHouse.Id
+            };
+
+            return Ok(bookDto); 
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBook([FromRoute] Guid id)
+        {
+            var book = await _dbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            var bookDto = new BookDto
+            {
+                Id = book.id,
+                Title = book.Title,
+                Description = book.Description,
+                RelaseDate = book.RelaseDate,
+                ISBN = book.ISBN,
+                Genres = book.Genres.select(x => x.id).toList(),
+                Authors = book.Authors.select(x => x.id).toList(),
+                PublishingHouse = PublishingHouse.id
+            };
+
+            return Ok(bookDto);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditBook([FromRoute] Guid id, BookDto book)
+        {
+            var originalBook = await _dbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+            if (originalBook == null)
+            {
+                return NotFound();
+            }
+
+            var genre = await _dbContext.Genres.WhereAsync(g => book.Genres.Contains(g.Id)).ToList();
+
+            var author = await _dbContext.Authors.WhereAsync(a => book.Authors.Contains(a.Id)).ToList();
+
+            var publishinghouse = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == id);
+            if (publishinghouse == null)
+            {
+                return NotFound();
+            }
+
+            originalBook.ISBN = book.ISBN;
+            originalBook.Title = book.Title;
+            originalBook.Authors = author;
+            originalBook.Genres = genre;
+            originalBook.PublishingHouse = publishinghouse;
+            if (book.Description != null)
+            {
+                originalBook.Description = book.Description;
+            }
+            if (book.RelaseDate != null)
+            {
+                originalBook.RelaseDate = book.RelaseDate;
+            }
+
+            _dbContext.SaveChangesAsync();
+
+            var bookFromDb = await _dbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+            if (bookFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var bookDto = new BookDto
+            {
+                Id = bookFromDb.Id,
+                Title = bookFromDb.Title,
+                Description = bookFromDb.Description,
+                RelaseDate = bookFromDb.RelaseDate,
+                ISBN = bookFromDb.ISBN,
+                Genres = genre.select(x => x.Id).ToList(),
+                Authors = author.select(x => x.Id).ToList(),
+                PublishingHouse = publishinghouse.Id,
+            };
+
+            return Ok(bookDto);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBook([FromRoute] Guid id)
+        {
+            var book = await _dbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Books.Remove(book);
+            await _dbContext.SaveChangesAsync();
+            return Ok();
         }
     }
 }

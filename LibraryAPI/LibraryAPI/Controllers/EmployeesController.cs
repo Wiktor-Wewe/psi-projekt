@@ -80,7 +80,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] EmployeeDto employee)
+        public async Task<IActionResult> Login([FromBody] EmployeeDto employee)
         {
             var user = _dbContext.Employees.FirstOrDefault(e => e.Name == employee.Name && e.Surname == employee.Surname);
             if (user == null)
@@ -114,19 +114,107 @@ namespace LibraryAPI.Controllers
         [HttpPost("Register")]
         public IActionResult Register(EmployeeDto employee)
         {
-            var newEmploye = new Employee()
+            var newEmployee = new Employee()
             {
                 Name = employee.Name,
                 Surname = employee.Surname,
                 JobPosition = employee.JobPosition,
             };
 
-            newEmploye.PasswordHash = _passwordHasher.HashPassword(newEmploye, employee.Password);
+            newEmploye.PasswordHash = _passwordHasher.HashPassword(newEmployee, employee.Password);
 
-            _dbContext.Employees.Add(newEmploye);
-            _dbContext.SaveChanges();
+            _dbContext.Employees.Add(newEmployee);
+            await _dbContext.SaveChangesAsync();
 
-            return Ok(_dbContext.Employees.FirstOrDefault(e => e.Name == employee.Name && e.Surname == employee.Surname));
+            var employeeFromDb = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Name == employee.Name && e.Surname == employee.Surname);
+            if (employeeFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var employeeDto = new EmployeeDto
+            {
+                Id = employeeFromDb.Id,
+                Name = employeeFromDb.Name,
+                Surname = employeeFromDb.Surname,
+                JobPosition = employeeFromDb.JobPosition,
+                Password = employeeFromDb.Password
+            };
+
+            return Ok(employeeDto);
+        }
+
+        [HttpGet("{id}")]
+        public async Tak<IActionResult> GetEmployee([FromRoute] Guid id)
+        {
+            var employee = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            var employeeDto = new EmployeeDto
+            {
+                Id = employee.Id,
+                Name = employee.Name,
+                Surname = employee.Surname,
+                JobPosition = employee.JobPosition,
+                Password = employee.Password
+            };
+
+            return Ok(employeeDto);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditEmployee([FromRoute] Guid id, EmployeeDto employee)
+        {
+            var originalEmployee = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (originalEmployee == null)
+            {
+                return NotFound();
+            }
+
+            originalEmployee.Name = employee.Name;
+            originalEmployee.Surname = employee.Surname;
+            originalEmployee.JobPosition = employee.JobPosition;
+            //Nie da się wziąć hasła, do naprawy/poprawy
+            //originalEmployee.Password = employee.Password;
+            //originalEmployee.PasswordHash = employee.Password;
+
+            await _dbContext.SaveChangesAsync();
+
+            var employeeFromDb = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if(employeeFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var employeeDto = new EmployeeDto
+            {
+                Id = employeeFromDb.Id,
+                Name = employeeFromDb.Name,
+                Surname = employeeFromDb.Surname,
+                JobPosition = employeeFromDb.JobPosition,
+                Password = employeeFromDb.Password
+            };
+            
+            return Ok(employeeDto);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEmployee([FromRoute] Guid id)
+        {
+            var employee = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Employees.Remove(employee);
+            await _dbContext.SaveChangesAsync();
+            return Ok();
         }
     }
 }

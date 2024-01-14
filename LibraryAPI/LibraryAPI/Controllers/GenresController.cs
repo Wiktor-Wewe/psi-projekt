@@ -124,7 +124,7 @@ namespace LibraryAPI.Controllers
 
         [Authorize]
         [HttpPost]
-        public ActionResult CreateGenre(GenreDto genre) 
+        public async Task<ActionResult> CreateGenre(GenreDto genre) 
         {
             var newGenre = new Genre()
             {
@@ -133,9 +133,86 @@ namespace LibraryAPI.Controllers
             };
 
             _dbContext.Genres.Add(newGenre);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
-            return Ok(_dbContext.Genres.FirstOrDefault(g => g.Name == genre.Name && g.Description == genre.Description));
+            var genreFromDb = await _dbContext.Genres.FirstOrDefaultAsync(g => g.Name == genre.Name && g.Description == genre.Description);
+            if(genreFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var genreDto = new GenreDto
+            {
+                Id = genreFromDb.Id,
+                Name = genreFromDb.Name,
+                Description = genreFromDb.Description,
+            };
+
+            return Ok(genreDto);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetGenre([FromRoute] Guid id)
+        {
+            var genre = await _dbContext.Genres.FirstOrDefaultAsync(g => g.Id == id);
+            if (genre == null)
+            {
+                return NotFound();
+            }
+
+            var genreDto = new GenreDto
+            {
+                Id = id,
+                Name = genre.Name,
+                Description = genre.Description,
+            };
+
+            return Ok(genreDto);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditGenre([FromRoute] Guid id, GenreDto genre)
+        {
+            var originalGenre = await _dbContext.Genres.FirstOrDefaultAsync(g => g.Id == id);
+            if (originalGenre == null)
+            {
+                return NotFound();
+            }
+
+            originalGenre.Name = genre.Name;
+            originalGenre.Description = genre.Description;
+
+            await _dbContext.SaveChangesAsync();
+            var genreFromDb = await _dbContext.Genres.FirstOrDefaultAsync(g => g.Id == id);
+            if (genreFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var genreDto = new GenreDto
+            {
+                Id = genreFromDb.Id,
+                Name = genreFromDb.Name,
+                Description = genreFromDb.Description,
+            };
+
+            return Ok(genreDto);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteGenre([FromRoute] Guid id)
+        {
+            var genre = await _dbContext.Genres.FirstOrDefaultAsync(g => g.Id == id);
+            if (genre == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Genres.Remove(genre);
+            await _dbContext.SaveChangesAsync();
+            return Ok();
         }
     }
 }
