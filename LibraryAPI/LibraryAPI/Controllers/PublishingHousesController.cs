@@ -243,6 +243,7 @@ namespace LibraryAPI.Controllers
 
             _dbContext.PublishingHouses.Remove(house);
             await _dbContext.SaveChangesAsync();
+
             return Ok();
         }
     }

@@ -184,6 +184,7 @@ namespace LibraryAPI.Controllers
             originalGenre.Description = genre.Description;
 
             await _dbContext.SaveChangesAsync();
+
             var genreFromDb = await _dbContext.Genres.FirstOrDefaultAsync(g => g.Id == id);
             if (genreFromDb == null)
             {

@@ -160,8 +160,6 @@ namespace LibraryAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateMember(MemberDto member)
         {
-            var rents = await _dbContext.Rents.WhereAsync(r => member.Rents.Contains(r.Id)).ToList();
-
             var newMember = new Member()
             {
                 Name = member.Name,
@@ -169,14 +167,16 @@ namespace LibraryAPI.Controllers
                 Birthdate = member.Birthdate,
                 Address = member.Address,
                 PhoneNumber = member.PhoneNumber,
-                Email = member.Email,
-                Rents = rents
+                Email = member.Email
             };
 
             _dbContext.Members.Add(newMember);
             await _dbContext.SaveChangesAsync();
 
-            var memberFromDb = await _dbContext.Members.FirstOrDefault(m => m.Surname == member.Surname && m.Email == member.Email);
+            var memberFromDb = await _dbContext.Members
+                .Include(m => m.Rents)
+                .FirstOrDefaultAsync(m => m.Surname == member.Surname && m.Email == member.Email);
+
             if (memberFromDb == null)
             {
                 return NotFound();
@@ -191,7 +191,7 @@ namespace LibraryAPI.Controllers
                 Address = memberFromDb.Address,
                 PhoneNumber = memberFromDb.PhoneNumber,
                 Email = memberFromDb.Email,
-                Rents = rents.select(x => x.Id).ToList()
+                Rents = memberFromDb.Rents.Select(r => r.Id).ToList()
             };
 
             return Ok(memberDto);
@@ -200,7 +200,10 @@ namespace LibraryAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMember([FromRoute] Guid id)
         {
-            var member = _dbContext.Members.FirstOrDefault(m => m.Id == id);
+            var member = await _dbContext.Members
+                .Include(m => m.Rents)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (member == null)
             {
                 return NotFound();
@@ -215,7 +218,7 @@ namespace LibraryAPI.Controllers
                 Address = member.Address,
                 PhoneNumber = member.PhoneNumber,
                 Email = member.Email,
-                Rents = member.Rents.select(x => x.Id).ToList()
+                Rents = member.Rents.Select(x => x.Id).ToList()
             };
 
             return Ok(memberDto);
@@ -225,13 +228,16 @@ namespace LibraryAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> EditMember([FromRoute] Guid id, MemberDto member)
         {
-            var originalMember = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == id);
+            var originalMember = await _dbContext.Members
+                .Include(m => m.Rents)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (originalMember == null)
             {
                 return NotFound();
             }
 
-            var rent = await _dbContext.Rents.WhereAsync(r => member.Rents.Contains(r.Id)).ToList();
+            var rents = await _dbContext.Rents.Where(r => member.Rents.Contains(r.Id)).ToListAsync();
 
             originalMember.Name = member.Name;
             originalMember.Surname = member.Surname;
@@ -239,11 +245,14 @@ namespace LibraryAPI.Controllers
             originalMember.Birthdate = member.Birthdate;
             originalMember.Address = member.Address;
             originalMember.PhoneNumber = member.PhoneNumber;
-            originalMember.Rents = rent;
+            originalMember.Rents = rents;
 
             await _dbContext.SaveChangesAsync();
 
-            var memberFromDb = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == id);
+            var memberFromDb = await _dbContext.Members
+                .Include(m => m.Rents)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (memberFromDb == null)
             {
                 return NotFound();
@@ -258,7 +267,7 @@ namespace LibraryAPI.Controllers
                 Address = memberFromDb.Address,
                 PhoneNumber = memberFromDb.PhoneNumber,
                 Email = memberFromDb.Email,
-                Rents = memberDto.Rents.Select(r => r.Id).ToArray()
+                Rents = memberFromDb.Rents.Select(r => r.Id).ToList()
             };
 
             return Ok(memberDto);

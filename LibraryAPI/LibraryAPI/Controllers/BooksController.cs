@@ -151,9 +151,14 @@ namespace LibraryAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBook(BookDto book) 
         {
-            var genres = await _dbContext.Genres.WhereAsync(g => book.Genres.Contains(g.Id)).ToList();
-            var authors = await _dbContext.Authors.WhereAsync(a => book.Authors.Contains(a.Id)).ToList();
+            var genres = await _dbContext.Genres.Where(g => book.Genres.Contains(g.Id)).ToListAsync();
+            var authors = await _dbContext.Authors.Where(a => book.Authors.Contains(a.Id)).ToListAsync();
             var publishingHouse = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == book.PublishingHouse);
+
+            if(publishingHouse == null)
+            {
+                return NotFound("Publishing House not found");
+            }
 
             var newBook = new Book()
             {
@@ -182,8 +187,8 @@ namespace LibraryAPI.Controllers
                 Description = bookFromDb.Description,
                 RelaseDate = bookFromDb.RelaseDate,
                 ISBN = bookFromDb.ISBN,
-                Genres = genres.select(x => x.Id).ToList(),
-                Authors = authors.select(x => x.Id).ToList(),
+                Genres = genres.Select(x => x.Id).ToList(),
+                Authors = authors.Select(x => x.Id).ToList(),
                 PublishingHouse = publishingHouse.Id
             };
 
@@ -193,7 +198,12 @@ namespace LibraryAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBook([FromRoute] Guid id)
         {
-            var book = await _dbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _dbContext.Books
+                .Include(b => b.Genres)
+                .Include(b => b.Authors)
+                .Include(b => b.PublishingHouseId)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (book == null)
             {
                 return NotFound();
@@ -201,14 +211,14 @@ namespace LibraryAPI.Controllers
 
             var bookDto = new BookDto
             {
-                Id = book.id,
+                Id = book.Id,
                 Title = book.Title,
                 Description = book.Description,
                 RelaseDate = book.RelaseDate,
                 ISBN = book.ISBN,
-                Genres = book.Genres.select(x => x.id).toList(),
-                Authors = book.Authors.select(x => x.id).toList(),
-                PublishingHouse = PublishingHouse.id
+                Genres = book.Genres.Select(x => x.Id).ToList(),
+                Authors = book.Authors.Select(x => x.Id).ToList(),
+                PublishingHouse = book.PublishingHouse.Id
             };
 
             return Ok(bookDto);
@@ -224,20 +234,19 @@ namespace LibraryAPI.Controllers
                 return NotFound();
             }
 
-            var genre = await _dbContext.Genres.WhereAsync(g => book.Genres.Contains(g.Id)).ToList();
-
-            var author = await _dbContext.Authors.WhereAsync(a => book.Authors.Contains(a.Id)).ToList();
-
+            var genres = await _dbContext.Genres.Where(g => book.Genres.Contains(g.Id)).ToListAsync();
+            var authors = await _dbContext.Authors.Where(a => book.Authors.Contains(a.Id)).ToListAsync();
             var publishinghouse = await _dbContext.PublishingHouses.FirstOrDefaultAsync(p => p.Id == id);
+
             if (publishinghouse == null)
             {
-                return NotFound();
+                return NotFound("Publishing house was not found");
             }
 
             originalBook.ISBN = book.ISBN;
             originalBook.Title = book.Title;
-            originalBook.Authors = author;
-            originalBook.Genres = genre;
+            originalBook.Authors = authors;
+            originalBook.Genres = genres;
             originalBook.PublishingHouse = publishinghouse;
             if (book.Description != null)
             {
@@ -248,9 +257,14 @@ namespace LibraryAPI.Controllers
                 originalBook.RelaseDate = book.RelaseDate;
             }
 
-            _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
-            var bookFromDb = await _dbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+            var bookFromDb = await _dbContext.Books
+                .Include(b => b.Genres)
+                .Include(b => b.Authors)
+                .Include(b => b.PublishingHouseId)
+                .FirstOrDefaultAsync(b => b.Id == id);
+            
             if (bookFromDb == null)
             {
                 return NotFound();
@@ -263,9 +277,9 @@ namespace LibraryAPI.Controllers
                 Description = bookFromDb.Description,
                 RelaseDate = bookFromDb.RelaseDate,
                 ISBN = bookFromDb.ISBN,
-                Genres = genre.select(x => x.Id).ToList(),
-                Authors = author.select(x => x.Id).ToList(),
-                PublishingHouse = publishinghouse.Id,
+                Genres = bookFromDb.Genres.Select(x => x.Id).ToList(),
+                Authors = bookFromDb.Authors.Select(x => x.Id).ToList(),
+                PublishingHouse = bookFromDb.PublishingHouse.Id,
             };
 
             return Ok(bookDto);

@@ -149,15 +149,14 @@ namespace LibraryAPI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetRent([FromRoute] Guid id)
         {
-            var rent = _dbContext.Rents
+            var rent = await _dbContext.Rents
+                .Include(r => r.Books)
                 .FirstOrDefaultAsync(r => r.Id == id);
-
 
             if (rent == null)
             {
                 return NotFound();
             }
-
 
             var rentDto = new RentDto
             {
@@ -179,15 +178,15 @@ namespace LibraryAPI.Controllers
             var member = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == rent.Member);
             if(member == null)
             {
-                return NotFound();
+                return NotFound("Member not found");
             }
 
-            var books = await _dbContext.Books.WhereAsync(b => rent.Books.Contains(b.Id)).ToList();
+            var books = await _dbContext.Books.Where(b => rent.Books.Contains(b.Id)).ToListAsync();
 
             var employee = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == rent.Employee);
             if(employee == null)
             {
-                return NotFound();
+                return NotFound("Employee not found");
             }
 
             var newRent = new Rent()
@@ -203,7 +202,10 @@ namespace LibraryAPI.Controllers
             _dbContext.Rents.Add(newRent);
             await _dbContext.SaveChangesAsync();
 
-            var rentFromDb = await _dbContext.Rents.FirstOrDefault(r => r.RentDate == rent.RentDate && r.PlannedReturnDate == rent.PlannedReturnDate);
+            var rentFromDb = await _dbContext.Rents
+                .Include(r => r.Books)
+                .FirstOrDefaultAsync(r => r.RentDate == rent.RentDate && r.PlannedReturnDate == rent.PlannedReturnDate);
+
             if (rentFromDb == null)
             {
                 return NotFound();
@@ -215,9 +217,9 @@ namespace LibraryAPI.Controllers
                 RentDate = rentFromDb.RentDate,
                 PlannedReturnDate = rentFromDb.PlannedReturnDate,
                 ReturnDate = rentFromDb.ReturnDate,
-                Member = member.select(x => x.Id).ToList(),
-                Books = booksselect(x => x.Id).ToList(),
-                Employee = employeeselect(x => x.Id).ToList()
+                Member = rentFromDb.MemberId,
+                Books = rentFromDb.Books.Select(x => x.Id).ToList(),
+                Employee = rentFromDb.EmployeeId
             };
 
             return Ok(rentDto);
@@ -226,24 +228,27 @@ namespace LibraryAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> EditRent([FromRoute]Guid id, RentDto rent)
         {
-            var originalRent = _dbContext.Rents.FirstOrDefault(r => r.Id == id);
+            var originalRent = await _dbContext.Rents
+                .Include(r => r.Books)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if(originalRent == null)
             {
-                return NotFound();
+                return NotFound("Rent not found");
             }
 
-            var member = _dbContext.Members.FirstOrDefault(m => m.Id == rent.Member);
+            var member = await _dbContext.Members.FirstOrDefaultAsync(m => m.Id == rent.Member);
             if(member == null)
             {
-                return NotFound();
+                return NotFound("Member not found");
             }
 
-            var books = _dbContext.Books.Where(b => rent.Books.Contains(b.Id)).ToList();
+            var books = await _dbContext.Books.Where(b => rent.Books.Contains(b.Id)).ToListAsync();
 
-            var employee = _dbContext.Employees.FirstOrDefault(e => e.Id == rent.Employee);
+            var employee = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == rent.Employee);
             if(employee == null)
             {
-                return NotFound();
+                return NotFound("Employee not found");
             }
 
             originalRent.RentDate = rent.RentDate;
@@ -253,8 +258,29 @@ namespace LibraryAPI.Controllers
             originalRent.Books = books;
             originalRent.Employee = employee;
 
-            _dbContext.SaveChanges();
-            return Ok(_dbContext.Rents.FirstOrDefault(r => r.Id == id));
+            await _dbContext.SaveChangesAsync();
+
+            var rentFromDb = await _dbContext.Rents
+                .Include(r => r.Books)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if(rentFromDb == null)
+            {
+                return NotFound();
+            }
+
+            var rentDto = new RentDto
+            {
+                Id = rentFromDb.Id,
+                RentDate = rentFromDb.RentDate,
+                PlannedReturnDate = rentFromDb.PlannedReturnDate,
+                ReturnDate = rentFromDb.ReturnDate,
+                Member = rentFromDb.MemberId,
+                Books = rentFromDb.Books.Select(b => b.Id).ToList(),
+                Employee = rentFromDb.EmployeeId,
+            };
+
+            return Ok(rentDto);
         }
 
         [HttpDelete("{id}")]

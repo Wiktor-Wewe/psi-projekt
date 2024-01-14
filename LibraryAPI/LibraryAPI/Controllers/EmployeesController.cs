@@ -1,8 +1,10 @@
 ﻿using LibraryAPI.Entities;
 using LibraryAPI.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -82,7 +84,7 @@ namespace LibraryAPI.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] EmployeeDto employee)
         {
-            var user = _dbContext.Employees.FirstOrDefault(e => e.Name == employee.Name && e.Surname == employee.Surname);
+            var user = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Name == employee.Name && e.Surname == employee.Surname);
             if (user == null)
             {
                 return NotFound();
@@ -93,15 +95,24 @@ namespace LibraryAPI.Controllers
                 return Unauthorized("zle haslo");
             }
 
+            var secretKey = _configuration["Jwt:SecretKey"];
+            var validIssuer = _configuration["Jwt:ValidIssuer"];
+            var validAudience = _configuration["Jwt:ValidAudience"];
+
+            if(secretKey == null || validIssuer == null || validAudience == null)
+            {
+                throw new Exception("Unable to create JWT");
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]); // check if is not null
+            var key = Encoding.UTF8.GetBytes(secretKey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, $"{user.Name}-{user.Surname}-{user.JobPosition}"),
-                    new Claim(JwtRegisteredClaimNames.Iss, _configuration["Jwt:ValidIssuer"]), // check if is not null
-                    new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:ValidAudience"]), // check if is not null
+                    new Claim(JwtRegisteredClaimNames.Iss, validIssuer),
+                    new Claim(JwtRegisteredClaimNames.Aud, validAudience),
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -112,7 +123,7 @@ namespace LibraryAPI.Controllers
         }
 
         [HttpPost("Register")]
-        public IActionResult Register(EmployeeDto employee)
+        public async Task<IActionResult> Register(EmployeeDto employee)
         {
             var newEmployee = new Employee()
             {
@@ -121,9 +132,10 @@ namespace LibraryAPI.Controllers
                 JobPosition = employee.JobPosition,
             };
 
-            newEmploye.PasswordHash = _passwordHasher.HashPassword(newEmployee, employee.Password);
+            newEmployee.PasswordHash = _passwordHasher.HashPassword(newEmployee, employee.Password);
 
             _dbContext.Employees.Add(newEmployee);
+
             await _dbContext.SaveChangesAsync();
 
             var employeeFromDb = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Name == employee.Name && e.Surname == employee.Surname);
@@ -138,14 +150,14 @@ namespace LibraryAPI.Controllers
                 Name = employeeFromDb.Name,
                 Surname = employeeFromDb.Surname,
                 JobPosition = employeeFromDb.JobPosition,
-                Password = employeeFromDb.Password
+                Password = "*************"
             };
 
             return Ok(employeeDto);
         }
 
         [HttpGet("{id}")]
-        public async Tak<IActionResult> GetEmployee([FromRoute] Guid id)
+        public async Task<IActionResult> GetEmployee([FromRoute] Guid id)
         {
             var employee = await _dbContext.Employees.FirstOrDefaultAsync(e => e.Id == id);
             if (employee == null)
@@ -159,7 +171,7 @@ namespace LibraryAPI.Controllers
                 Name = employee.Name,
                 Surname = employee.Surname,
                 JobPosition = employee.JobPosition,
-                Password = employee.Password
+                Password = "**********"
             };
 
             return Ok(employeeDto);
@@ -178,9 +190,7 @@ namespace LibraryAPI.Controllers
             originalEmployee.Name = employee.Name;
             originalEmployee.Surname = employee.Surname;
             originalEmployee.JobPosition = employee.JobPosition;
-            //Nie da się wziąć hasła, do naprawy/poprawy
-            //originalEmployee.Password = employee.Password;
-            //originalEmployee.PasswordHash = employee.Password;
+            originalEmployee.PasswordHash = _passwordHasher.HashPassword(originalEmployee, employee.Password);
 
             await _dbContext.SaveChangesAsync();
 
@@ -196,7 +206,7 @@ namespace LibraryAPI.Controllers
                 Name = employeeFromDb.Name,
                 Surname = employeeFromDb.Surname,
                 JobPosition = employeeFromDb.JobPosition,
-                Password = employeeFromDb.Password
+                Password = "***********"
             };
             
             return Ok(employeeDto);
